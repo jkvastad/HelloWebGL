@@ -1,5 +1,7 @@
 const THREE = require('three');
-const OrbitControls = require('three-orbitcontrols');
+global.THREE = THREE;
+require('three/examples/js/controls/OrbitControls');
+require('three/examples/js/geometries/DecalGeometry');
 
 var windowHeight = window.innerHeight;
 var windowWidth = window.innerWidth;
@@ -26,16 +28,20 @@ renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
 var geometry = new THREE.BoxGeometry( 1, 1, 1 );
-var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+var texture = new THREE.TextureLoader().load('textures/crate.gif');
+var material = new THREE.MeshBasicMaterial( { map: texture } );
 var cube = new THREE.Mesh( geometry, material );
 scene.add( cube );
 
-const controls = new OrbitControls(views[0].camera);
+const controls = new THREE.OrbitControls(views[0].camera);
 
 const helper1 = new THREE.CameraHelper(views[0].camera);
 const helper2 = new THREE.CameraHelper(views[1].camera);
 //scene.add(helper1);
 scene.add(helper2);
+
+var decal = new THREE.Mesh(new THREE.DecalGeometry(cube,views[1].camera.position,views[1].camera.rotation,new THREE.Vector3(1,2,1)), material);
+scene.add(decal);
 
 function init(){    
     views[0].camera.position.z = 5;    
