@@ -1,10 +1,12 @@
 const THREE = require('three');
-global.THREE = THREE;
+global.THREE = THREE; //three examples sometimes require global THREE object
 require('three/examples/js/controls/OrbitControls');
 require('three/examples/js/geometries/DecalGeometry');
 
 var windowHeight = window.innerHeight;
 var windowWidth = window.innerWidth;
+
+var decals = [];
 
 var scene = new THREE.Scene();
 var views= [{
@@ -20,7 +22,7 @@ var views= [{
     width: 0.5,
     height: 1.0,
     background: new THREE.Color( 0.0, 0.0, 0.0 ),
-    camera: new THREE.OrthographicCamera(-10,10,10,-10,0.1,100)
+    camera: new THREE.OrthographicCamera(-1,1,1,-1,0.1,100)
 }];
 
 var renderer = new THREE.WebGLRenderer();
@@ -33,17 +35,68 @@ var material = new THREE.MeshBasicMaterial( { map: texture } );
 var cube = new THREE.Mesh( geometry, material );
 scene.add( cube );
 
-const controls = new THREE.OrbitControls(views[0].camera);
+var mainCamera = views[0].camera;
+var projector = views[1].camera;
 
-const helper1 = new THREE.CameraHelper(views[0].camera);
-const helper2 = new THREE.CameraHelper(views[1].camera);
+var currentControls;
+var controls = [];
+
+window.addEventListener("keyup", keyUpEvents);
+
+const helper1 = new THREE.CameraHelper(mainCamera);
+const helper2 = new THREE.CameraHelper(projector);
 //scene.add(helper1);
 scene.add(helper2);
 
-var decal = new THREE.Mesh(new THREE.DecalGeometry(cube,views[1].camera.position,views[1].camera.rotation,new THREE.Vector3(1,2,1)), material);
-scene.add(decal);
+init();
+animate();
 
-function init(){    
+function addDecal(){
+    let decal = new THREE.Mesh(new THREE.DecalGeometry(cube,projector.position,projector.rotation,
+        new THREE.Vector3(projector.right - projector.left,projector.top - projector.bottom, projector.far - projector.near)), material);
+    decals.push(decal);
+    scene.add(decal);
+}
+
+function removeDecal(){
+    if (decals.length > 0) {
+        scene.remove(decals.pop());   
+    }    
+}
+
+function keyUpEvents(event){
+    var alias = {
+        "q" : 81,
+        "w" : 87,
+        "1" : 49,
+        "2" : 50
+    };    
+    if (event.keyCode == alias["q"]) {
+        addDecal();
+    }
+    if (event.keyCode == alias["w"]) {
+        removeDecal();
+    }
+    if (event.keyCode == alias["1"]) {
+        switchCameraControls(0);
+    }
+    if (event.keyCode == alias["2"]) {
+        switchCameraControls(1);
+    }
+};
+
+function switchCameraControls(cameraNumber){
+    if (cameraNumber < controls.length){
+        currentControls.enabled = false;
+        currentControls = controls[cameraNumber];
+        currentControls.enabled = true;
+    }
+}
+
+function init(){
+    controls = [new THREE.OrbitControls(mainCamera),new THREE.OrbitControls(projector)];
+    controls[1].enabled = false;
+    currentControls = controls[0];
     views[0].camera.position.z = 5;    
     views[1].camera.position.z = 5;    
 }
@@ -70,9 +123,6 @@ function render(){
 
 function animate() {    
     render();
-    controls.update();
+    currentControls.update();
     requestAnimationFrame( animate );
 }
-
-init();
-animate();
