@@ -29,9 +29,12 @@ var renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
-var geometry = new THREE.BoxGeometry( 1, 1, 1 );
 var texture = new THREE.TextureLoader().load('textures/crate.gif');
+var geometry = new THREE.BoxGeometry( 1, 1, 1 );
 var material = new THREE.MeshBasicMaterial( { map: texture } );
+var cube = new THREE.Mesh( geometry, material );
+//scene.add( cube );
+
 var decalDiffuse = new THREE.TextureLoader().load('textures/decal-diffuse.png');
 var decalNormal = new THREE.TextureLoader().load('textures/decal-normal.jpg');
 var decalMaterial = new THREE.MeshPhongMaterial( {
@@ -49,8 +52,6 @@ var decalMaterial = new THREE.MeshPhongMaterial( {
 } );
 decalMaterial.color.setHex(0xff69b4);
 
-var cube = new THREE.Mesh( geometry, material );
-
 var points = [];
 for (var deg = 0; deg <= 180; deg += 6) {
 
@@ -66,7 +67,6 @@ var eggMaterial = new THREE.MeshPhongMaterial( { color: 0xFFFF20 } );
 var egg = new THREE.Mesh(eggGeometry, eggMaterial);
 egg.position.set(0, 0, 0);
 
-//scene.add( cube );
 scene.add(egg);
 scene.add( new THREE.AmbientLight( 0x443333 ) );
 
