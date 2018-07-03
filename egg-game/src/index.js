@@ -30,8 +30,11 @@ renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
 var geometry = new THREE.BoxGeometry( 1, 1, 1 );
-var texture = new THREE.TextureLoader().load('textures/crate.gif');
 var material = new THREE.MeshBasicMaterial( { map: texture } );
+var cube = new THREE.Mesh( geometry, material );
+scene.add( cube );
+
+var texture = new THREE.TextureLoader().load('textures/crate.gif');
 var decalDiffuse = new THREE.TextureLoader().load('textures/decal-diffuse.png');
 var decalNormal = new THREE.TextureLoader().load('textures/decal-normal.jpg');
 var decalMaterial = new THREE.MeshPhongMaterial( {
@@ -48,9 +51,6 @@ var decalMaterial = new THREE.MeshPhongMaterial( {
     wireframe: false
 } );
 decalMaterial.color.setHex(0xff69b4);
-
-var cube = new THREE.Mesh( geometry, material );
-scene.add( cube );
 
 scene.add( new THREE.AmbientLight( 0x443333 ) );
 
