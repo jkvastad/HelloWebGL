@@ -50,8 +50,24 @@ var decalMaterial = new THREE.MeshPhongMaterial( {
 decalMaterial.color.setHex(0xff69b4);
 
 var cube = new THREE.Mesh( geometry, material );
-scene.add( cube );
 
+var points = [];
+for (var deg = 0; deg <= 180; deg += 6) {
+
+    var rad = Math.PI * deg / 180;
+    var point = new THREE.Vector2((0.72 + .08 * Math.cos(rad)) * Math.sin(rad), - Math.cos(rad)); // the "egg equation"
+    //console.log( point ); // x-coord should be greater than zero to avoid degenerate triangles; it is not in this formula.
+    points.push(point);
+
+}
+
+var eggGeometry = new THREE.LatheBufferGeometry(points, 32);
+var eggMaterial = new THREE.MeshPhongMaterial( { color: 0xFFFF20 } );
+var egg = new THREE.Mesh(eggGeometry, eggMaterial);
+egg.position.set(0, 0, 0);
+
+//scene.add( cube );
+scene.add(egg);
 scene.add( new THREE.AmbientLight( 0x443333 ) );
 
 var light = new THREE.DirectionalLight( 0xffddcc, 1 );
@@ -79,7 +95,7 @@ init();
 animate();
 
 function addDecal(){
-    let decal = new THREE.Mesh(new THREE.DecalGeometry(cube,projector.position,projector.rotation,
+    let decal = new THREE.Mesh(new THREE.DecalGeometry(egg,projector.position,projector.rotation,
         new THREE.Vector3(projector.right - projector.left,projector.top - projector.bottom, projector.far - projector.near)), decalMaterial);
     decals.push(decal);
     scene.add(decal);
