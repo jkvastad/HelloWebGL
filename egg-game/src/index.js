@@ -22,7 +22,7 @@ var views= [{
     width: 0.5,
     height: 1.0,
     background: new THREE.Color( 0.0, 0.0, 0.0 ),
-    camera: new THREE.OrthographicCamera(-0.1,0.1,0.1,-0.1,0.1,1)
+    camera: new THREE.OrthographicCamera(-0.1,0.1,0.1,-0.1,0.1,10)
 }];
 
 var renderer = new THREE.WebGLRenderer();
