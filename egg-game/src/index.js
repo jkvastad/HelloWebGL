@@ -29,12 +29,12 @@ var renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
+var texture = new THREE.TextureLoader().load('textures/crate.gif');
 var geometry = new THREE.BoxGeometry( 1, 1, 1 );
 var material = new THREE.MeshBasicMaterial( { map: texture } );
 var cube = new THREE.Mesh( geometry, material );
 scene.add( cube );
 
-var texture = new THREE.TextureLoader().load('textures/crate.gif');
 var decalDiffuse = new THREE.TextureLoader().load('textures/decal-diffuse.png');
 var decalNormal = new THREE.TextureLoader().load('textures/decal-normal.jpg');
 var decalMaterial = new THREE.MeshPhongMaterial( {
