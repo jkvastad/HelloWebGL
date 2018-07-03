@@ -22,7 +22,7 @@ var views= [{
     width: 0.5,
     height: 1.0,
     background: new THREE.Color( 0.0, 0.0, 0.0 ),
-    camera: new THREE.OrthographicCamera(-1,1,1,-1,0.1,100)
+    camera: new THREE.OrthographicCamera(-0.1,0.1,0.1,-0.1,0.1,1)
 }];
 
 var renderer = new THREE.WebGLRenderer();
@@ -32,8 +32,35 @@ document.body.appendChild( renderer.domElement );
 var geometry = new THREE.BoxGeometry( 1, 1, 1 );
 var texture = new THREE.TextureLoader().load('textures/crate.gif');
 var material = new THREE.MeshBasicMaterial( { map: texture } );
+var decalDiffuse = new THREE.TextureLoader().load('textures/decal-diffuse.png');
+var decalNormal = new THREE.TextureLoader().load('textures/decal-normal.jpg');
+var decalMaterial = new THREE.MeshPhongMaterial( {
+    specular: 0x444444,
+    map: decalDiffuse,
+    normalMap: decalNormal,
+    normalScale: new THREE.Vector2( 1, 1 ),
+    shininess: 30,
+    transparent: true,
+    depthTest: true,
+    depthWrite: false,
+    polygonOffset: true,
+    polygonOffsetFactor: - 4,
+    wireframe: false
+} );
+decalMaterial.color.setHex(0xff69b4);
+
 var cube = new THREE.Mesh( geometry, material );
 scene.add( cube );
+
+scene.add( new THREE.AmbientLight( 0x443333 ) );
+
+var light = new THREE.DirectionalLight( 0xffddcc, 1 );
+light.position.set( 1, 0.75, 0.5 );
+scene.add( light );
+
+var light = new THREE.DirectionalLight( 0xccccff, 1 );
+light.position.set( -1, 0.75, -0.5 );
+scene.add( light );
 
 var mainCamera = views[0].camera;
 var projector = views[1].camera;
@@ -53,7 +80,7 @@ animate();
 
 function addDecal(){
     let decal = new THREE.Mesh(new THREE.DecalGeometry(cube,projector.position,projector.rotation,
-        new THREE.Vector3(projector.right - projector.left,projector.top - projector.bottom, projector.far - projector.near)), material);
+        new THREE.Vector3(projector.right - projector.left,projector.top - projector.bottom, projector.far - projector.near)), decalMaterial);
     decals.push(decal);
     scene.add(decal);
 }

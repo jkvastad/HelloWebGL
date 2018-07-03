@@ -1,5 +1,6 @@
 egg-game/dist/*
 !egg-game/dist/textures
+!egg-game/dist/index.html
 
 node_modules
 .vscode
