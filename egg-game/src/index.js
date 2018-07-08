@@ -3,38 +3,50 @@ global.THREE = THREE; //three examples sometimes require global THREE object
 require('three/examples/js/controls/OrbitControls');
 require('three/examples/js/geometries/DecalGeometry');
 
-var windowHeight = window.innerHeight;
-var windowWidth = window.innerWidth;
-
-var decals = [];
-
 var scene = new THREE.Scene();
-var views= [{
-    left: 0,
-    top: 0,
-    width: 0.5,
-    height: 1.0,
-    background: new THREE.Color( 0.5, 0.5, 0.7 ),
-    camera: new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 )
-},{
-    left: 0.5,
-    top: 0,
-    width: 0.5,
-    height: 1.0,
-    background: new THREE.Color( 0.0, 0.0, 0.0 ),
-    camera: new THREE.OrthographicCamera(-0.1,0.1,0.1,-0.1,0.1,10)
-}];
 
 var renderer = new THREE.WebGLRenderer();
+renderer.setClearColor(new THREE.Color( 0xff0000 ),1);
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
-var texture = new THREE.TextureLoader().load('textures/crate.gif');
-var geometry = new THREE.BoxGeometry( 1, 1, 1 );
-var material = new THREE.MeshBasicMaterial( { map: texture } );
-var cube = new THREE.Mesh( geometry, material );
-//scene.add( cube );
+var points = [];
+for (var deg = 0; deg <= 180; deg += 6) {
+    var rad = Math.PI * deg / 180;
+    var point = new THREE.Vector2((0.72 + .08 * Math.cos(rad)) * Math.sin(rad), - Math.cos(rad)); // the "egg equation"
+    //console.log( point ); // x-coord should be greater than zero to avoid degenerate triangles; it is not in this formula.
+    points.push(point);
 
+}
+
+var eggGeometry = new THREE.LatheBufferGeometry(points, 32);
+var eggMaterial = new THREE.MeshPhongMaterial( { color: 0xFFFF20 } );
+var egg = new THREE.Mesh(eggGeometry, eggMaterial);
+egg.position.set(0, 0, 0);
+scene.add(egg);
+
+scene.add( new THREE.AmbientLight( 0x443333 ) );
+var light = new THREE.DirectionalLight( 0xffddcc, 1 );
+light.position.set( 1, 0.75, 0.5 );
+scene.add( light );
+var light = new THREE.DirectionalLight( 0xccccff, 1 );
+light.position.set( -1, 0.75, -0.5 );
+scene.add( light );
+
+var mainCamera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+
+var controls = new THREE.OrbitControls(mainCamera);
+
+var decalProjector = new THREE.Mesh( new THREE.BoxBufferGeometry( 1, 1, 1), new THREE.MeshNormalMaterial());
+decalProjector.visible = false;
+scene.add(decalProjector);
+
+var geometry = new THREE.BufferGeometry();
+geometry.setFromPoints( [ new THREE.Vector3(), new THREE.Vector3() ] );
+normalLine = new THREE.Line( geometry, new THREE.LineBasicMaterial( { linewidth: 4 } ) );
+scene.add( normalLine );
+
+var decals = [];
 var decalDiffuse = new THREE.TextureLoader().load('textures/decal-diffuse.png');
 var decalNormal = new THREE.TextureLoader().load('textures/decal-normal.jpg');
 var decalMaterial = new THREE.MeshPhongMaterial( {
@@ -52,51 +64,9 @@ var decalMaterial = new THREE.MeshPhongMaterial( {
 } );
 decalMaterial.color.setHex(0xff69b4);
 
-var points = [];
-for (var deg = 0; deg <= 180; deg += 6) {
-
-    var rad = Math.PI * deg / 180;
-    var point = new THREE.Vector2((0.72 + .08 * Math.cos(rad)) * Math.sin(rad), - Math.cos(rad)); // the "egg equation"
-    //console.log( point ); // x-coord should be greater than zero to avoid degenerate triangles; it is not in this formula.
-    points.push(point);
-
-}
-
-var eggGeometry = new THREE.LatheBufferGeometry(points, 32);
-var eggMaterial = new THREE.MeshPhongMaterial( { color: 0xFFFF20 } );
-var egg = new THREE.Mesh(eggGeometry, eggMaterial);
-egg.position.set(0, 0, 0);
-
-scene.add(egg);
-scene.add( new THREE.AmbientLight( 0x443333 ) );
-
-var light = new THREE.DirectionalLight( 0xffddcc, 1 );
-light.position.set( 1, 0.75, 0.5 );
-scene.add( light );
-
-var light = new THREE.DirectionalLight( 0xccccff, 1 );
-light.position.set( -1, 0.75, -0.5 );
-scene.add( light );
-
-var mainCamera = views[0].camera;
-var projector = views[1].camera;
-
-var currentControls;
-var controls = [];
-
-window.addEventListener("keyup", keyUpEvents);
-
-const helper1 = new THREE.CameraHelper(mainCamera);
-const helper2 = new THREE.CameraHelper(projector);
-//scene.add(helper1);
-scene.add(helper2);
-
-init();
-animate();
-
 function addDecal(){
-    let decal = new THREE.Mesh(new THREE.DecalGeometry(egg,projector.position,projector.rotation,
-        new THREE.Vector3(projector.right - projector.left,projector.top - projector.bottom, projector.far - projector.near)), decalMaterial);
+    let decal = new THREE.Mesh(new THREE.DecalGeometry(egg,decalProjector.position,decalProjector.rotation,
+        new THREE.Vector3(1,1,1)), decalMaterial);
     decals.push(decal);
     scene.add(decal);
 }
@@ -107,6 +77,32 @@ function removeDecal(){
     }    
 }
 
+window.addEventListener('mousemove', onMouseMove);
+function onMouseMove(event){
+    var raycaster = new THREE.Raycaster();
+    var mouse = new THREE.Vector2();
+    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+    raycaster.setFromCamera(mouse,mainCamera);
+    var eggIntersections = raycaster.intersectObject(egg);
+    if(eggIntersections.length > 0){
+        let intersectionPoint = eggIntersections[0].point;        
+        let surfaceNormal = eggIntersections[0].face.normal.clone();
+        surfaceNormal.transformDirection(egg.matrixWorld);        
+        surfaceNormal.add(intersectionPoint);
+        
+        decalProjector.position.copy(intersectionPoint);
+        decalProjector.lookAt(surfaceNormal);
+        
+        normalLine.geometry.attributes.position.setXYZ( 0, intersectionPoint.x, intersectionPoint.y, intersectionPoint.z );
+        normalLine.geometry.attributes.position.setXYZ( 1, surfaceNormal.x, surfaceNormal.y, surfaceNormal.z );
+        normalLine.geometry.attributes.position.needsUpdate = true;
+					
+        console.log(normalLine.geometry.attributes.position);
+    }
+}
+
+window.addEventListener("keyup", keyUpEvents);
 function keyUpEvents(event){
     var alias = {
         "q" : 81,
@@ -120,52 +116,21 @@ function keyUpEvents(event){
     if (event.keyCode == alias["w"]) {
         removeDecal();
     }
-    if (event.keyCode == alias["1"]) {
-        switchCameraControls(0);
-    }
-    if (event.keyCode == alias["2"]) {
-        switchCameraControls(1);
-    }
 };
 
-function switchCameraControls(cameraNumber){
-    if (cameraNumber < controls.length){
-        currentControls.enabled = false;
-        currentControls = controls[cameraNumber];
-        currentControls.enabled = true;
-    }
-}
-
 function init(){
-    controls = [new THREE.OrbitControls(mainCamera),new THREE.OrbitControls(projector)];
-    controls[1].enabled = false;
-    currentControls = controls[0];
-    views[0].camera.position.z = 5;    
-    views[1].camera.position.z = 5;    
+    mainCamera.position.z = 5;    
 }
 
-function render(){
-    for(let i = 0; i < views.length; i++){
-        let view = views[i];
-        let camera = view.camera;
-        let left   = Math.floor( windowWidth  * view.left );
-        let top    = Math.floor( windowHeight * view.top );
-        let width  = Math.floor( windowWidth  * view.width );
-        let height = Math.floor( windowHeight * view.height );                
-                
-        renderer.setViewport(left, top, width, height);
-        renderer.setScissor( left, top, width, height );
-        renderer.setScissorTest( true );
-        renderer.setClearColor(view.background);
-
-        camera.aspect = width / height;
-        camera.updateProjectionMatrix();
-        renderer.render( scene, camera );	
-    }	
+function render(){                  
+        renderer.render( scene, mainCamera );	
 }
 
 function animate() {    
     render();
-    currentControls.update();
+    controls.update();
     requestAnimationFrame( animate );
 }
+
+init();
+animate();
