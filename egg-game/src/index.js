@@ -78,13 +78,18 @@ function removeDecal(){
 }
 
 window.addEventListener('mousemove', onMouseMove);
+var mouse = new THREE.Vector2();
 function onMouseMove(event){
-    var raycaster = new THREE.Raycaster();
-    var mouse = new THREE.Vector2();
     mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+    updateIntersection();    
+}
+
+var raycaster = new THREE.Raycaster();
+var eggIntersections;
+function updateIntersection(){        
     raycaster.setFromCamera(mouse,mainCamera);
-    var eggIntersections = raycaster.intersectObject(egg);
+    eggIntersections = raycaster.intersectObject(egg);
     if(eggIntersections.length > 0){
         let intersectionPoint = eggIntersections[0].point;        
         let surfaceNormal = eggIntersections[0].face.normal.clone();
@@ -97,22 +102,20 @@ function onMouseMove(event){
         normalLine.geometry.attributes.position.setXYZ( 0, intersectionPoint.x, intersectionPoint.y, intersectionPoint.z );
         normalLine.geometry.attributes.position.setXYZ( 1, surfaceNormal.x, surfaceNormal.y, surfaceNormal.z );
         normalLine.geometry.attributes.position.needsUpdate = true;
-					
-        console.log(normalLine.geometry.attributes.position);
     }
+}
+
+window.addEventListener("mousedown",crackEgg);
+function crackEgg(){
+    updateIntersection();
+    if(eggIntersections.length > 0) addDecal();
 }
 
 window.addEventListener("keyup", keyUpEvents);
 function keyUpEvents(event){
     var alias = {
-        "q" : 81,
-        "w" : 87,
-        "1" : 49,
-        "2" : 50
-    };    
-    if (event.keyCode == alias["q"]) {
-        addDecal();
-    }
+        "w" : 87
+    };        
     if (event.keyCode == alias["w"]) {
         removeDecal();
     }
