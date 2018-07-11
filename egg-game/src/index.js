@@ -10,6 +10,8 @@ renderer.setClearColor(new THREE.Color( 0xff0000 ),1);
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
+
+function createEgg(color){
 var points = [];
 for (var deg = 0; deg <= 180; deg += 6) {
     var rad = Math.PI * deg / 180;
@@ -18,11 +20,11 @@ for (var deg = 0; deg <= 180; deg += 6) {
     points.push(point);
 
 }
-
 var eggGeometry = new THREE.LatheBufferGeometry(points, 32);
-var eggMaterial = new THREE.MeshPhongMaterial( { color: 0xFFFF20 } );
-var egg = new THREE.Mesh(eggGeometry, eggMaterial);
-egg.position.set(0, 0, 0);
+var eggMaterial = new THREE.MeshPhongMaterial( { color: color } );
+return new THREE.Mesh(eggGeometry, eggMaterial);
+}
+var egg = createEgg(Math.random() * 0xffffff);
 scene.add(egg);
 
 scene.add( new THREE.AmbientLight( 0x443333 ) );
@@ -64,6 +66,7 @@ var decalMaterial = new THREE.MeshPhongMaterial( {
 } );
 decalMaterial.color.setHex(0xff69b4);
 
+
 function addDecal(){
     let decal = new THREE.Mesh(new THREE.DecalGeometry(egg,decalProjector.position,decalProjector.rotation,
         new THREE.Vector3(1,1,1)), decalMaterial);
@@ -75,6 +78,12 @@ function removeDecal(){
     if (decals.length > 0) {
         scene.remove(decals.pop());   
     }    
+}
+
+function removeAllDecals(){
+    while (decals.length > 0) {
+        removeDecal();            
+    }
 }
 
 window.addEventListener('mousemove', onMouseMove);
@@ -121,18 +130,29 @@ function keyUpEvents(event){
     }
 };
 
+function render(){                  
+    renderer.render( scene, mainCamera );	
+}
+
 function init(){
+    egg.position.set(0, 0, 0);
     mainCamera.position.z = 5;    
 }
 
-function render(){                  
-        renderer.render( scene, mainCamera );	
+function animate() {        
+    updateGameState();
+    controls.update();    
+    render();
+    requestAnimationFrame( animate );
 }
 
-function animate() {    
-    render();
-    controls.update();
-    requestAnimationFrame( animate );
+function updateGameState(){
+    if(decals.length > 2){
+        removeAllDecals();
+        scene.remove(egg);
+        egg = createEgg(Math.random() * 0xffffff);    
+        scene.add(egg);
+    }
 }
 
 init();
